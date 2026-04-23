@@ -4,7 +4,7 @@ from typing import Tuple
 
 # =========================
 # Sorting Utilities
-# =========================
+
 
 def argsort(X: np.ndarray, axis: int = -1, stable: bool = True) -> np.ndarray:
     """
