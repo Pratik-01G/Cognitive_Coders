@@ -105,3 +105,24 @@ def histogram(x: np.ndarray,bins: int | np.ndarray = 10,range: tuple = None,dens
     widths = np.diff(bin_edges)
     counts = counts/(counts.sum()*widths)
   return counts, bin_edges
+
+# ----------------------------------------------------
+# Covariance and Correlation
+# ----------------------------------------------------
+def covariance_matrix(X: np.ndarray, ddof: int = 1) -> np.ndarray:
+  X = np.asarray(X, dtype=float)
+  if X.ndim == 1:
+    X = X[:, None]
+  n, d = X.shape
+  if n <= ddof:
+    raise ValueError(f"Need at least {ddof + 1} observations for ddof={ddof}.")
+  X_centred = X - X.mean(axis=0)
+  return (X_centred.T @ X_centred) / (n - ddof)
+
+def correlation_matrix(X: np.ndarray) -> np.ndarray:
+  cov = covariance_matrix(X, ddof=1)
+  d = np.sqrt(np.diag(cov))
+  denom = np.outer(d, d)
+  with np.errstate(invalid="ignore"):
+    corr = np.where(denom == 0, np.nan, cov / denom)
+  return corr
