@@ -82,13 +82,13 @@ def iqr(x: np.ndarray, axis: int = None, ignore_nan: bool = False) -> np.ndarray
 # ----------------------------------------------------
 # Histogram
 # ----------------------------------------------------
-def histogram(x: np.ndarray,bins: int | np.ndarray = 10,range: tuple = None,density: bool = False,) -> tuple:
+def histogram(x: np.ndarray,bins: int | np.ndarray = 10,range: tuple = None,density: bool = False) -> tuple:
   x = np.asarray(x, dtype=float).ravel()
   if x.size == 0:
     raise ValueError("Cannot compute histogram of an empty array.")
   if isinstance(bins, int):
     if bins < 1:
-      raise ValueError(f"bins must be >= 1, got {bins}.")
+      raise ValueError(f"Bins must be >= 1, got {bins}.")
     lo = x.min() if range is None else range[0]
     hi = x.max() if range is None else range[1]
     if lo == hi:
@@ -97,11 +97,11 @@ def histogram(x: np.ndarray,bins: int | np.ndarray = 10,range: tuple = None,dens
   else:
     bin_edges = np.asarray(bins, dtype=float)
     if bin_edges.ndim != 1 or len(bin_edges) < 2:
-      raise ValueError("bins array must be 1-D with at least 2 elements.")
+      raise ValueError("Bins array must be 1-D with at least 2 elements.")
   indices = np.searchsorted(bin_edges, x, side="right") - 1
   indices = np.clip(indices, 0, len(bin_edges) - 2)
   counts = np.bincount(indices, minlength=len(bin_edges) - 1).astype(float)
   if density:
     widths = np.diff(bin_edges)
-    counts = counts / (counts.sum() * widths)
+    counts = counts/(counts.sum()*widths)
   return counts, bin_edges
