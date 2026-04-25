@@ -55,3 +55,53 @@ def kurtosis(x: np.ndarray, axis: int = None, excess: bool = True) -> np.ndarray
     raise ValueError("Standard deviation is 0 — kurtosis is undefined.")
   m4 = np.mean(((x - mu) / sigma) ** 4, axis=axis)
   return m4 - 3.0 if excess else m4
+
+# --------------------------------------------------------------------------
+# Quantiles and Percentile
+# --------------------------------------------------------------------------
+def quantile(x: np.ndarray,q: float | list,axis: int = None,ignore_nan: bool = False) -> np.ndarray:
+  q_arr = np.asarray(q)
+  if np.any(q_arr < 0) or np.any(q_arr > 1):
+    raise ValueError(f"All quantile values must be in [0, 1]; got {q}.")
+  x = np.asarray(x, dtype=float)
+  if ignore_nan:
+    return np.nanquantile(x, q, axis=axis, method="linear")
+  return np.quantile(x, q, axis=axis, method="linear")
+
+def percentile(x: np.ndarray,p: float | list,axis: int = None,ignore_nan: bool = False) -> np.ndarray:
+  p_arr = np.asarray(p)
+  if np.any(p_arr < 0) or np.any(p_arr > 100):
+    raise ValueError(f"All percentile values must be in [0, 100]; got {p}.")
+  return quantile(x, p_arr / 100.0, axis=axis, ignore_nan=ignore_nan)
+
+def iqr(x: np.ndarray, axis: int = None, ignore_nan: bool = False) -> np.ndarray:
+  q1 = quantile(x, 0.25, axis=axis, ignore_nan=ignore_nan)
+  q3 = quantile(x, 0.75, axis=axis, ignore_nan=ignore_nan)
+  return q3 - q1
+
+# ----------------------------------------------------
+# Histogram
+# ----------------------------------------------------
+def histogram(x: np.ndarray,bins: int | np.ndarray = 10,range: tuple = None,density: bool = False,) -> tuple:
+  x = np.asarray(x, dtype=float).ravel()
+  if x.size == 0:
+    raise ValueError("Cannot compute histogram of an empty array.")
+  if isinstance(bins, int):
+    if bins < 1:
+      raise ValueError(f"bins must be >= 1, got {bins}.")
+    lo = x.min() if range is None else range[0]
+    hi = x.max() if range is None else range[1]
+    if lo == hi:
+      lo, hi = lo - 0.5, hi + 0.5
+    bin_edges = np.linspace(lo, hi, bins + 1)
+  else:
+    bin_edges = np.asarray(bins, dtype=float)
+    if bin_edges.ndim != 1 or len(bin_edges) < 2:
+      raise ValueError("bins array must be 1-D with at least 2 elements.")
+  indices = np.searchsorted(bin_edges, x, side="right") - 1
+  indices = np.clip(indices, 0, len(bin_edges) - 2)
+  counts = np.bincount(indices, minlength=len(bin_edges) - 1).astype(float)
+  if density:
+    widths = np.diff(bin_edges)
+    counts = counts / (counts.sum() * widths)
+  return counts, bin_edges
