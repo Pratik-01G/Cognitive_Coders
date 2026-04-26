@@ -126,3 +126,84 @@ def correlation_matrix(X: np.ndarray) -> np.ndarray:
   with np.errstate(invalid="ignore"):
     corr = np.where(denom == 0, np.nan, cov / denom)
   return corr
+
+# ----------------------------------------------------
+# Welford's Online/Streaming algorithm
+# ----------------------------------------------------
+class WelfordStatistics:
+  def __init__(self, shape: tuple = None):
+    self._n = 0
+    self._mean = None
+    self._M2 = None
+    self._shape = shape
+
+  def _init_arrays(self, x: np.ndarray):
+    # On 1st update, initialize the internal array
+    self._mean = np.zeros_like(x, dtype=float)
+    self._M2 = np.zeros_like(x, dtype=float)
+
+  def update(self, x: np.ndarray):
+    x = np.asarray(x, dtype=float)
+    if self._mean is None:
+      self._init_arrays(x)
+    self._n += 1
+    delta = x - self._mean
+    self._mean += delta / self._n
+    delta2 = x - self._mean
+    self._M2 += delta * delta2
+    return self
+
+  def update_batch(self, X: np.ndarray):
+    X = np.asarray(X, dtype=float)
+    for row in X:
+      self.update(row)
+    return self
+
+  def mean(self)->np.ndarray:
+    if self._n==0:
+      return None
+    return self._mean.copy()
+
+  def variance(self,ddof:int=0)->np.ndarray:
+    if self._n==0:
+      return None
+    if self._n<=ddof:
+      raise ValueError(f"Require atleast {ddof+1}observations for ddof={ddof}")
+    return self._M2/(self._n-ddof)
+
+  def std(self,ddof:int=0)->np.ndarray:
+    v=self.variance(ddof=ddof)
+    return None if v is None else np.sqrt(v)
+
+  @property
+  def n(self)->int: #Number of observations so far
+    return self._n
+
+  def reset(self): #Reset all accumulaor to initial state
+    self._n=0
+    self._mean=None
+    self._M2=None
+    return self
+
+  def merge(self,other:"WelfordStatistics")->"WelfordStatistics":
+    if other._n==0:
+      return self
+    if self._n==0:
+      self._n=other._n
+      self._mean=other.mean().copy()
+      self._M2=other._M2.copy()
+      return self
+    if self._mean.shape!=other._mean.shape:
+      raise ValueError(f"Shape Mismatched")
+    num_a,num_b=self._n,other._n
+    num_combined=num_a+num_b
+    delta=other._mean-self._mean
+    new_mean=self._mean+delta*(num_b/num_combined)
+    new_M2=self._M2+other._M2+(delta**2)*(num_a*num_b/num_combined)
+    self._n=num_combined
+    self._mean=new_mean
+    self._M2=new_M2
+    return self
+
+  def __repr__(self)->str:
+    return f"Welfordstatistics(n={self._n},mean={self._mean},M2={self._M2})"
