@@ -206,4 +206,4 @@ class WelfordStatistics:
     return self
 
   def __repr__(self)->str:
-    return f"Welfordstatistics(n={self._n},mean={self._mean},M2={self._M2})"
+    return f"Welfordstatistics(n={self._n},mean={self._mean},std={self.std()})"
