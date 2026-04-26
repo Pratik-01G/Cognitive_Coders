@@ -207,3 +207,40 @@ class WelfordStatistics:
 
   def __repr__(self)->str:
     return f"Welfordstatistics(n={self._n},mean={self._mean},std={self.std()})"
+
+# ----------------------------------------------------
+# Summary Utility
+# ----------------------------------------------------
+def describe(x:np.ndarray, ddof:int=1)->dict:
+  x=np.asarray(x,dtype=float).ravel()
+  if x.size==0:
+    raise ValueError(f"Empty array cannot be described")
+  nan_mask=~np.isnan(x)
+  x_clean=x[nan_mask]
+  if x_clean.size==0:
+    raise ValueError(f"All Values are NaN")
+  q1,med,q3=np.quantile(x_clean,[0.25,0.50,0.75],method="linear")
+  try:
+    skew=float(skewness(x_clean))
+  except ValueError:
+    skew=float("nan")
+  try:
+    kurt=float(kurtosis(x_clean))
+  except ValueError:
+    kurt=float("nan")
+
+  return{
+      "n": int(x_clean.size),
+      "nan_count": int(x.size-x_clean.size),
+      "mean": float(np.mean(x_clean)),
+      "std": float(np.std(x_clean,ddof=ddof)),
+      "variance": float(np.var(x_clean,ddof=ddof)),
+      "min": float(np.min(x_clean)),
+      "max": float(np.max(x_clean)),
+      "q25": float(q1),
+      "median": float(med),
+      "q75": float(q3),
+      "iqr": float(q3-q1),
+      "skew": float(skew),
+      "kurtosis": float(kurt)
+  }
