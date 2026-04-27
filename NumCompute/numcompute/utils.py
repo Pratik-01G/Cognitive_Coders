@@ -80,3 +80,67 @@ def softmax(x: np.ndarray, axis: int = -1) -> np.ndarray:
   x_shifted = x - np.max(x, axis=axis, keepdims=True)
   exp_x = np.exp(x_shifted)
   return exp_x / np.sum(exp_x, axis=axis, keepdims=True)
+
+# -------------------------------------------------------------------------------------------------
+# Numerical Helpers
+# -------------------------------------------------------------------------------------------------
+def logsumexp(x: np.ndarray, axis: int = -1, keepdims: bool = False) -> np.ndarray:
+  x = np.asarray(x, dtype=float)
+  c = np.max(x, axis=axis, keepdims=True)
+  shifted = x - c
+  result = np.log(np.sum(np.exp(shifted), axis=axis, keepdims=True)) + c
+  if not keepdims:
+    result = np.squeeze(result, axis=axis)
+  return result
+def log_softmax(x: np.ndarray, axis: int = -1) -> np.ndarray:
+  x = np.asarray(x, dtype=float)
+  return x - logsumexp(x, axis=axis, keepdims=True)
+def clip_gradient(grad: np.ndarray, max_norm: float) -> np.ndarray:
+  if max_norm <= 0:
+    raise ValueError(f"max_norm must be positive, got {max_norm}.")
+  grad = np.asarray(grad, dtype=float)
+  norm = np.linalg.norm(grad)
+  if norm > max_norm:
+    grad = grad * (max_norm / norm)
+  return grad
+
+# -------------------------------------------------------------------------------------
+# Batching Utilities 
+# -------------------------------------------------------------------------------------
+def batch_iter(*arrays: np.ndarray,batch_size: int,shuffle: bool = False,seed: int = None,):
+  if batch_size < 1:
+    raise ValueError(f"batch_size must be >= 1, got {batch_size}.")
+  n = arrays[0].shape[0]
+  for arr in arrays[1:]:
+    if arr.shape[0] != n:
+      raise ValueError(f"All arrays must have the same first dimension.")
+  rng = np.random.default_rng(seed)
+  indices = rng.permutation(n) if shuffle else np.arange(n)
+  for start in range(0, n, batch_size):
+    idx = indices[start: start + batch_size]
+    if len(arrays) == 1:
+      yield arrays[0][idx]
+    else:
+      yield tuple(arr[idx] for arr in arrays)
+
+def one_hot_encode(labels: np.ndarray, num_classes: int = None) -> np.ndarray:
+  labels = np.asarray(labels, dtype=int).ravel()
+  if labels.min() < 0:
+    raise ValueError("labels must be non-negative integers.")
+  if num_classes is None:
+    num_classes = int(labels.max()) + 1
+  if labels.max() >= num_classes:
+    raise ValueError(f"label {labels.max()} exceeds num_classes-1 = {num_classes - 1}.")
+  n = len(labels)
+  ohe = np.zeros((n, num_classes), dtype=float)
+  ohe[np.arange(n), labels] = 1.0
+  return ohe
+
+def pairwise_distances(X: np.ndarray, metric: str = "euclidean") -> np.ndarray:
+  dispatch = {
+      "euclidean": euclidean_distance,
+      "manhattan": manhattan_distance,
+      "cosine":lambda a, b: 1.0 - cosine_similarity(a, b),}
+  if metric not in dispatch:
+    raise ValueError(f"Unknown metric '{metric}'. Choose from {list(dispatch)}.")
+  return dispatch[metric](X, X)
