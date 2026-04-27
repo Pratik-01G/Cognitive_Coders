@@ -46,3 +46,37 @@ def minkowski_distance(X: np.ndarray, Y: np.ndarray, p: float = 2.0) -> np.ndarr
   if np.isinf(p):
     return np.max(diff, axis=2)
   return np.sum(diff ** p, axis=2) ** (1.0 / p)
+# -------------------------------------------------------------------------------------------------
+# Activation Functions
+# -------------------------------------------------------------------------------------------------
+def relu(x: np.ndarray) -> np.ndarray:
+  return np.maximum(0.0, np.asarray(x, dtype=float))
+def relu_derivative(x: np.ndarray) -> np.ndarray:
+  return (np.asarray(x, dtype=float) > 0).astype(float)
+def sigmoid(x: np.ndarray) -> np.ndarray:
+  x = np.asarray(x, dtype=float)
+  pos_mask = x >= 0
+  result = np.empty_like(x)
+  # For positive values: 1 / (1 + exp(-x))
+  result[pos_mask] = 1.0 / (1.0 + np.exp(-x[pos_mask]))
+  # For negative values: exp(x) / (1 + exp(x))
+  exp_x = np.exp(x[~pos_mask])
+  result[~pos_mask] = exp_x / (1.0 + exp_x)
+  return result
+def sigmoid_derivative(x: np.ndarray) -> np.ndarray:
+  s = sigmoid(x)
+  return s * (1.0 - s)
+def tanh_activation(x: np.ndarray) -> np.ndarray:
+  return np.tanh(np.asarray(x, dtype=float))
+def tanh_derivative(x: np.ndarray) -> np.ndarray:
+  return 1.0 - np.tanh(np.asarray(x, dtype=float)) ** 2
+def leaky_relu(x: np.ndarray, alpha: float = 0.01) -> np.ndarray:
+  if alpha < 0:
+    raise ValueError(f"alpha must be non-negative, got {alpha}.")
+  x = np.asarray(x, dtype=float)
+  return np.where(x >= 0, x, alpha * x)
+def softmax(x: np.ndarray, axis: int = -1) -> np.ndarray:
+  x = np.asarray(x, dtype=float)
+  x_shifted = x - np.max(x, axis=axis, keepdims=True)
+  exp_x = np.exp(x_shifted)
+  return exp_x / np.sum(exp_x, axis=axis, keepdims=True)
