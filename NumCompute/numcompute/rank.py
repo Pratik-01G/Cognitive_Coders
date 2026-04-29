@@ -74,7 +74,7 @@ def percentile(data, q, interpolation='linear', axis=None, ignore_nan=False):
         elif interpolation == 'lower'   : return s[lo].astype(float)
         elif interpolation == 'higher'  : return s[hi].astype(float)
         elif interpolation == 'midpoint': return (s[lo] + s[hi]) / 2.0
-        else:  # nearest
+        else:
             return np.where(fr >= 0.5, s[hi], s[lo]).astype(float)
 
     if axis is None:
