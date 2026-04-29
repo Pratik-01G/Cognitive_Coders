@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "numcompute"
+version = "0.1.0"
+description = "A NumPy-based ML utilities framework from scratch"
+authors = [
+  { name="Vedant Hire" }
+]
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+  "numpy"
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
