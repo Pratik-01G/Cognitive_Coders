@@ -1,5 +1,22 @@
 import numpy as np
 def rank(data, method='average'):
+    """
+    Rank array elements with tie-handling.
+
+    Parameters
+    ----------
+    data   : 1-D or 2-D np.ndarray
+    method : 'average' | 'dense' | 'ordinal'
+
+    Returns
+    -------
+    ranks : np.ndarray, same shape as data, dtype float64 (1-based)
+
+    Examples
+    --------
+    >>> rank(np.array([3, 1, 4, 1, 5, 9, 2, 6]), method='average')
+    array([4. , 1.5, 5. , 1.5, 6. , 8. , 3. , 7. ])
+    """
     _METHODS = {'average', 'dense', 'ordinal'}
     if method not in _METHODS:
         raise ValueError(f"method={method!r} must be one of {_METHODS}")
@@ -45,6 +62,28 @@ def rank(data, method='average'):
 
 
 def percentile(data, q, interpolation='linear', axis=None, ignore_nan=False):
+     """
+    Compute the q-th percentile(s) of data.
+
+    Parameters
+    ----------
+    data          : np.ndarray
+    q             : float or array-like, values in [0, 100]
+    interpolation : 'linear' | 'lower' | 'higher' | 'midpoint' | 'nearest'
+    axis          : int or None  (None → operate on flattened array)
+    ignore_nan    : bool  (if True, NaNs are dropped before computing)
+
+    Returns
+    -------
+    float or np.ndarray
+
+    Examples
+    --------
+    >>> percentile(np.arange(1, 11), 50)
+    5.5
+    >>> percentile(np.arange(1, 11), [25, 50, 75])
+    array([3.25, 5.5 , 7.75])
+    """
     _INTERP = {'linear', 'lower', 'higher', 'midpoint', 'nearest'}
     if interpolation not in _INTERP:
         raise ValueError(f"interpolation={interpolation!r} must be one of {_INTERP}")
