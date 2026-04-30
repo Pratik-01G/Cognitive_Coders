@@ -35,6 +35,25 @@ def _per_class_counts(y_true, y_pred, labels):
 #confusion matrix
 
 def confusion_matrix(y_true, y_pred, labels=None):
+    """
+    Confusion matrix.
+
+    Returns
+    -------
+    cm     : np.ndarray, shape (k, k)
+             cm[i, j] = # samples with true label i predicted as j
+    labels : np.ndarray, shape (k,)
+
+    Examples
+    --------
+    >>> cm, lbl = confusion_matrix(
+    ...     np.array([0,1,2,0,1,2]),
+    ...     np.array([0,2,1,0,0,2]))
+    >>> cm
+    array([[2, 0, 0],
+           [1, 0, 1],
+           [0, 1, 1]])
+    """
     y_true = _as_1d(np.asarray(y_true), 'y_true')
     y_pred = _as_1d(np.asarray(y_pred), 'y_pred')
     _check_len(y_true, y_pred)
@@ -59,6 +78,14 @@ def confusion_matrix(y_true, y_pred, labels=None):
 
 #accuracy
 def accuracy(y_true, y_pred):
+     """
+    Fraction of correctly predicted labels.
+
+    Examples
+    --------
+    >>> accuracy(np.array([1,0,1,1]), np.array([1,0,0,1]))
+    0.75
+    """
     y_true = _as_1d(np.asarray(y_true), 'y_true')
     y_pred = _as_1d(np.asarray(y_pred), 'y_pred')
     _check_len(y_true, y_pred)
@@ -102,19 +129,56 @@ def _clf_metric(metric, y_true, y_pred, average, pos_label, zero_division):
 
 
 def precision(y_true, y_pred, average='binary', pos_label=1, zero_division=0.0):
+    """
+    Precision = TP / (TP + FP).
+
+    Parameters
+    ----------
+    average : 'binary' | 'macro' | 'micro' | 'none'
+    pos_label : positive class for 'binary' mode
+
+    Examples
+    --------
+    >>> precision(np.array([0,1,1,0,1]), np.array([0,1,0,0,1]))
+    0.6666...
+    """
     return _clf_metric('precision', y_true, y_pred, average, pos_label, zero_division)
 
 
 def recall(y_true, y_pred, average='binary', pos_label=1, zero_division=0.0):
+    """
+    Recall = TP / (TP + FN).
+
+    Examples
+    --------
+    >>> recall(np.array([0,1,1,0,1]), np.array([0,1,0,0,1]))
+    0.6666...
+    """
     return _clf_metric('recall', y_true, y_pred, average, pos_label, zero_division)
 
 
 def f1(y_true, y_pred, average='binary', pos_label=1, zero_division=0.0):
+    """
+    F1 = 2*TP / (2*TP + FP + FN).
+
+    Examples
+    --------
+    >>> f1(np.array([0,1,1,0,1]), np.array([0,1,0,0,1]))
+    0.6666...
+    """
     return _clf_metric('f1', y_true, y_pred, average, pos_label, zero_division)
 
 # regression metrics
 
 def mse(y_true, y_pred):
+    """
+    Mean Squared Error.
+
+    Examples
+    --------
+    >>> mse(np.array([1., 2., 3.]), np.array([1., 2., 4.]))
+    0.3333...
+    """
     y_true = np.asarray(y_true, dtype=float)
     y_pred = np.asarray(y_pred, dtype=float)
     if y_true.shape != y_pred.shape:
@@ -125,14 +189,20 @@ def mse(y_true, y_pred):
 
 
 def rmse(y_true, y_pred):
+    """Root Mean Squared Error = sqrt(MSE)."""
     return float(np.sqrt(mse(y_true, y_pred)))
 def mae(y_true, y_pred):
+    """Mean Absolute Error = mean(|y_true - y_pred|)."""
     y_true = np.asarray(y_true, dtype=float)
     y_pred = np.asarray(y_pred, dtype=float)
     if y_true.shape != y_pred.shape:
         raise ValueError(f"Shape mismatch: {y_true.shape} vs {y_pred.shape}")
     return float(np.mean(np.abs(y_true - y_pred)))
 def r2(y_true, y_pred):
+    """
+    Coefficient of determination R² = 1 - SS_res / SS_tot.
+    Returns 0.0 when y_true is constant.
+    """
     y_true = np.asarray(y_true, dtype=float)
     y_pred = np.asarray(y_pred, dtype=float)
     ss_res = np.sum((y_true - y_pred) ** 2)
@@ -141,6 +211,27 @@ def r2(y_true, y_pred):
 
 # ROC curve + AUC 
 def roc_curve(y_true, y_score, pos_label=1):
+    """
+    ROC curve for binary classification.
+
+    Parameters
+    ----------
+    y_true   : 1-D array of binary labels
+    y_score  : 1-D array of scores (higher → more likely positive)
+    pos_label: the positive class label
+
+    Returns
+    -------
+    fpr        : np.ndarray  (false positive rates)
+    tpr        : np.ndarray  (true positive rates / recall)
+    thresholds : np.ndarray  (score thresholds in descending order)
+
+    Examples
+    --------
+    >>> fpr, tpr, th = roc_curve(
+    ...     np.array([0,0,1,1]),
+    ...     np.array([0.1,0.4,0.35,0.8]))
+    """
     y_true  = _as_1d(np.asarray(y_true),          'y_true')
     y_score = _as_1d(np.asarray(y_score, float),  'y_score')
     _check_len(y_true, y_score)
@@ -170,6 +261,14 @@ def roc_curve(y_true, y_score, pos_label=1):
 
 
 def auc(fpr, tpr):
+     """
+    Area Under the Curve via the trapezoidal rule.
+
+    Examples
+    --------
+    >>> auc(np.array([0., 0.5, 1.]), np.array([0., 0.5, 1.]))
+    0.5
+    """
     fpr = np.asarray(fpr, dtype=float)
     tpr = np.asarray(tpr, dtype=float)
     if fpr.shape != tpr.shape:
